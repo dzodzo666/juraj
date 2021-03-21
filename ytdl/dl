@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+# download script for youtube
+
+infile=$1
+
+cat $infile | while read line
+do
+url=`echo $line | cut -f1 -d";"`
+echo "Downloading: $url"
+/usr/local/bin/youtube-dl --no-check-certificate $url
+done
+
+for code in `cat $infile | cut -f1 -d";" | rev | cut -c1-11 | rev`
+do
+input=`ls | grep -e $code`
+author=`cat $infile | grep -e $code | cut -f2 -d";"`
+title=`cat $infile | grep -e $code | cut -f3 -d";"`
+
+echo "Processing: $input"
+echo "Author: $author"
+echo "Title: $title"
+
+/usr/local/bin/ffmpeg -threads 16 -i "$input" -metadata "artist=${author}" -metadata "title=${title}" -ab 192k -acodec libmp3lame "${author} - ${title}".mp3
+echo $?
+echo "mp3 generated..."
+done
+
+rm *.flv *.mp4 *.webm *.mkv
